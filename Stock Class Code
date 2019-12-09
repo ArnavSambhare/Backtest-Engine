@@ -1,0 +1,63 @@
+class Stock(object):
+  import numpy as np
+  import pandas as pd
+  import matplotlib.pyplot as plt
+  
+  def __init__(self, data, ticker):
+    self.data = data
+    self.ticker = ticker
+    self.data['Date'] = pd.to_datetime(self.data['Date'], infer_datetime_format=True)
+    self.data['Daily_returns'] = np.float32(0)
+    for i in range(1, len(self.data)):
+      self.data['Daily_returns'][i] = ((self.data['Adj Close'][i] - self.data['Adj Close'][i-1])/self.data['Adj Close'][i-1])*100
+    self.data['Signals'] = np.int32(0)
+
+    self.dateindex = {}
+    for i in range(0, len(self.data)):
+      self.dateindex[self.data["Date"][i]] = i
+
+  
+  def add_signals(self, signals):
+    self.data['Signals'] = pd.Series(signals)
+  
+  def plot_returns_distribution(self, end, start = None):
+    if start == None:
+      start = self.data['Date'][0]
+
+    start = pd.to_datetime(start, infer_datetime_format=True)
+    end = pd.to_datetime(end, infer_datetime_format=True)
+    returns = []
+    for i in range(self.dateindex[start], self.dateindex[end] + 1):
+      returns.append(self.data['Daily_returns'][i])
+    
+    plt.hist(returns)
+    plt.show()
+
+
+  def plot_daily_volatility(self, end, start = None):
+    if start == None:
+      start = self.data['Date'][0]
+    start = pd.to_datetime(start, infer_datetime_format=True)
+    end = pd.to_datetime(end, infer_datetime_format=True)
+    volatility = []
+    dates = []
+    a = self.dateindex[start]
+    for i in range(self.dateindex[start], self.dateindex[end] + 1):
+      volatility.append(np.std(self.data['Daily_returns'][a:i+1]))
+      dates.append(self.data['Date'][i])
+    
+    volatility = np.asarray(volatility)
+    dates = np.asarray(dates)
+    plt.plot(dates, volatility)
+    plt.show()
+
+
+  def plot_prices(self,end, start = None):
+    if start == None:
+      start = self.data['Date'][0]
+    start = pd.to_datetime(start, infer_datetime_format=True)
+    end = pd.to_datetime(end, infer_datetime_format=True)
+    a = self.dateindex[start]
+    b = self.dateindex[end]
+    plt.plot(self.data['Date'][a:b+1], self.data['Adj Close'][a:b+1])
+    plt.show()
