@@ -1,0 +1,92 @@
+class Portfolio(object):
+  def __init__(self, cash, date):
+    self.initial_cash = cash
+    self.cash = cash
+    self.start_date = pd.to_datetime(date, infer_datetime_format=True)
+    self.cash_log = {self.start_date: self.cash}
+    self.stocks = {}
+    self.asset_value = {self.start_date: self.initial_cash}
+    self.transaction_log = []
+  
+  def cash_available(self):
+    return self.cash 
+
+  def add_stocks(self, stocklist):
+    if(type(stocklist) == list):
+      for i in range(len(stocklist)):
+        if(stocklist[i] not in self.stocks.keys()):
+          self.stocks[stocklist[i]] = 0
+    elif (type(stocklist) == __main__.Stock):
+      if stocklist not in self.stocks.keys():
+        self.stocks[stocklist] = 0
+  
+  def cumulative_return(self, date):
+    i = 0
+    while(cash_log.keys()[i] <= date):
+      i += 1
+    return ((cash_log[cash_log.keys()[i-1]] - cash_log[cash_log.keys()[0]])/cash_log[cash_log.keys()[0]])*100
+
+  def show_positions(self):
+    print(pd.DataFrame(self.stocks))
+  
+  def backtest(self, end, start):
+    self.cash_log = {self.start_date: self.initial_cash}
+    self.transaction_log = []
+    self.cash = self.initial_cash
+    rts = [0]
+    start = pd.to_datetime(start, infer_datetime_format=True)
+    end = pd.to_datetime(end, infer_datetime_format=True)
+
+    for i in range(0, len(list(self.stocks.keys())[0].data)):
+      current_date = list(self.stocks.keys())[0].data['Date'][i]
+      if(current_date >= start and current_date <= end):
+        for stock in list(self.stocks.keys()):
+          if(stock.data['Signals'][stock.dateindex[current_date]] == 1 and self.stocks[stock] == 0):
+            if(self.cash >= stock.data['Open'][stock.dateindex[current_date]]):
+              self.cash -= stock.data['Open'][stock.dateindex[current_date]]
+              self.stocks[stock] = 1
+              self.transaction_log.append(str(current_date) + ": Sold 1 share of " + stock.ticker + " at $" + str(stock.data['Open'][stock.dateindex[current_date]]))
+          elif(stock.data['Signals'][stock.dateindex[current_date]] == 0 and self.stocks[stock] == 1):
+            self.cash += stock.data['Open'][stock.dateindex[current_date]]
+            self.stocks[stock] = 0
+            self.transaction_log.append(str(current_date) + ": Sold 1 share of " + stock.ticker + " at $" + str(stock.data['Open'][stock.dateindex[current_date]]))
+        self.cash_log[current_date] = self.cash
+
+        aum = 0
+        for stock in list(self.stocks.keys()):
+          aum += self.stocks[stock]*stock.data['Adj Close'][stock.dateindex[current_date]]
+
+        self.asset_value[current_date] = self.cash + aum
+        rts.append(((self.asset_value[list(self.asset_value.keys())[-1]] - self.asset_value[list(self.asset_value.keys())[-2]])/self.asset_value[list(self.asset_value.keys())[-2]])*100)
+
+      elif current_date > end:
+        break
+
+    for stock in self.stocks.keys():
+      if self.stocks[stock] > 0:
+        self.cash += stock.data['Adj Close'][stock.dateindex[end]]
+        self.stocks[stock] = 0
+    self.cash_log[end] = self.cash
+    self.asset_value[end] = self.cash
+    
+    print("Backtest Complete")
+    print("Initial Cash: ", self.initial_cash)
+    print("Final Cash: ", self.cash)
+    print("Return: ", (((self.cash-self.initial_cash)/self.cash)*100))
+    print("Maximum Drawdown: ", min(rts))
+  
+
+  def plot_cash(self):
+    x = list(self.cash_log.keys())
+    y = list(self.cash_log.values())
+    plt.plot(x, y)
+    plt.show()
+
+  def plot_valuation(self):
+    x = list(self.asset_value.keys())
+    y = list(self.asset_value.values())
+    plt.plot(x, y)
+    plt.show()
+
+  def view_transaction_logs(self):
+    print(self.transaction_log)
