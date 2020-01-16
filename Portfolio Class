@@ -45,7 +45,7 @@ class Portfolio(object):
             if(self.cash >= stock.data['Open'][stock.dateindex[current_date]]):
               self.cash -= stock.data['Open'][stock.dateindex[current_date]]
               self.stocks[stock] = 1
-              self.transaction_log.append(str(current_date) + ": Sold 1 share of " + stock.ticker + " at $" + str(stock.data['Open'][stock.dateindex[current_date]]))
+              self.transaction_log.append(str(current_date) + ": Bought 1 share of " + stock.ticker + " at $" + str(stock.data['Open'][stock.dateindex[current_date]]))
           elif(stock.data['Signals'][stock.dateindex[current_date]] == 0 and self.stocks[stock] == 1):
             self.cash += stock.data['Open'][stock.dateindex[current_date]]
             self.stocks[stock] = 0
